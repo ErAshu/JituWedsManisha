@@ -808,3 +808,21 @@ html, body { overflow-x: hidden; max-width: 100%; }
   html, body, #card { overflow-x: clip; }     /* clips without creating a scroll container */
 }
 body { touch-action: pan-y pinch-zoom; overscroll-behavior-x: none; }
+
+/* J & M seal: clear spacing so the "&" never overlaps the letters or Ganesh ji */
+.seal-ganesh { width: 56%; height: 56%; margin-top: -22%; }
+.seal-initials { bottom: 10%; gap: 5px; padding: 3px 14px 4px; line-height: 1; letter-spacing: 0; }
+.seal-initials i { font-family: var(--serif); font-style: italic; font-weight: 600; font-size: .95em; margin: 0 1px; }
+
+/* Cinzel Decorative joins "TH" automatically — keep letters separate */
+.title, .names em, .seal-initials, .scratch-label, .scratch-done, .coin-face b, .event h3, .timer b,
+.map figcaption, .tap-hint, .info-card h4, .date-big, .city { font-variant-ligatures: none; font-feature-settings: "liga" 0, "dlig" 0; }
+
+/* English headings in plain Cinzel: Cinzel Decorative's swash "H" collides with the next letter */
+.title, .names em, .scratch-label, .scratch-done, .event h3, .map figcaption, .info-card h4, .tap-hint, .families, .timer b, .city {
+  font-family: "Cinzel", "Cormorant Garamond", serif;
+}
+.tap-hint span, .title span, .event h3 span, .scratch-done span { font-family: inherit; }
+.title span, .event h3 span { font-family: var(--hindi); }
+.tap-hint span { font-family: var(--hindi); }
+.scratch-done span { font-family: var(--script); }
