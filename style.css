@@ -570,3 +570,147 @@ body.scratching { overflow: hidden; touch-action: none; overscroll-behavior: non
 .hero .scratch-label { margin-bottom: 1.4vh; }
 .hero .coin { width: min(clamp(84px, 24vw, 110px), 12vh); }
 .hero .scratch-must { margin-top: 1.4vh; }
+
+/* Hindi Saptapadi: Devanagari needs a little more line height */
+.saptapadi .title, .saptapadi .vows b { font-family: var(--hindi); }
+.saptapadi .title { letter-spacing: 0; }
+.saptapadi .intro-text { font-style: normal; line-height: 1.8; }
+.saptapadi .vows p { font-size: 17px; line-height: 1.75; }
+.saptapadi .vows h4 { font-size: 20px; }
+
+/* =========================================================
+   Rolled scroll with pull-ribbon
+   ========================================================= */
+.scroll-wrap { position: relative; max-width: 640px; margin: 0 auto; padding-bottom: 185px; transition: padding-bottom .8s ease; }
+.scroll-wrap.open { padding-bottom: 20px; }
+.rod {
+  position: relative; z-index: 3; height: 26px; margin: 0 -12px; border-radius: 14px;
+  background:
+    repeating-linear-gradient(90deg, rgba(0,0,0,0) 0 22px, rgba(122,74,8,.25) 22px 24px),
+    linear-gradient(180deg, #7a4a08 0%, #f6d27a 30%, #e7b54a 55%, #8d5a0c 100%);
+  box-shadow: 0 6px 14px rgba(0,0,0,.45);
+}
+.rod::before, .rod::after { /* finials */
+  content: ""; position: absolute; top: 50%; width: 22px; height: 22px; margin-top: -11px; border-radius: 50%;
+  background: radial-gradient(circle at 35% 35%, #fff1b8, #e7b54a 45%, #8d5a0c);
+  box-shadow: 0 2px 5px rgba(0,0,0,.5);
+}
+.rod::before { left: -14px; } .rod::after { right: -14px; }
+.rod-bottom { background-position-y: var(--roll, 0px); }
+
+.scroll-body {
+  height: 0; overflow: hidden; position: relative; z-index: 2;
+  margin: -6px 0; /* tuck paper under the rods */
+}
+.scroll-body.animating { transition: height 1.5s cubic-bezier(.22,.8,.25,1); }
+.scroll-wrap .scroll-paper { border-radius: 0; max-width: none; margin: 0; padding: 46px 28px; }
+.scroll-wrap .scroll-paper > * { opacity: calc(var(--p, 0) * 1.4 - .2); }
+.scroll-wrap .scroll-paper::before, .scroll-wrap .scroll-paper::after { content: none; }
+/* paper curl shading near the rolling edge */
+.scroll-body::after { content: ""; position: absolute; left: 0; right: 0; bottom: 0; height: 40px; pointer-events: none;
+  background: linear-gradient(transparent, rgba(122,74,8,.35)); opacity: calc(1 - var(--p, 0) * .6); }
+
+/* Ribbon */
+.ribbon {
+  position: absolute; left: 50%; top: 8px; width: 70px; height: 130px; margin-left: -35px;
+  background: none; border: none; padding: 0; cursor: grab; touch-action: none; z-index: 4;
+  transform-origin: 50% 0; animation: ribbonSway 2.6s ease-in-out infinite;
+  transition: opacity .6s, transform .8s cubic-bezier(.5,0,.75,0);
+  -webkit-user-select: none; user-select: none;
+}
+.ribbon:active { cursor: grabbing; }
+.ribbon-tail {
+  position: absolute; top: 0; width: 24px; height: 118px;
+  background: linear-gradient(90deg, #8d1015, #d92b2b 45%, #a3191f);
+  clip-path: polygon(0 0, 100% 0, 100% 100%, 50% 86%, 0 100%);
+  box-shadow: inset 0 0 0 2px rgba(231,181,74,.6);
+}
+.ribbon-tail::after { content: ""; position: absolute; inset: 0 5px; border-left: 1.5px dashed rgba(255,241,184,.7); border-right: 1.5px dashed rgba(255,241,184,.7); }
+.ribbon-tail.l { left: 8px; transform: rotate(7deg); transform-origin: top center; }
+.ribbon-tail.r { right: 8px; transform: rotate(-7deg); transform-origin: top center; }
+.ribbon-seal {
+  position: absolute; left: 50%; top: 4px; width: 56px; height: 56px; margin-left: -28px; border-radius: 50%;
+  display: grid; place-items: center; font-size: 17px; color: #fff1b8;
+  background: radial-gradient(circle at 35% 30%, #f6d27a, #c48a1c 50%, #7a4a08);
+  box-shadow: 0 0 0 3px #8d1015, 0 0 0 5px #e7b54a, 0 6px 14px rgba(0,0,0,.5);
+  text-shadow: 0 1px 2px rgba(0,0,0,.6);
+}
+.ribbon-seal::before { content: ""; position: absolute; inset: 5px; border-radius: 50%; border: 1.5px dashed rgba(255,241,184,.75); }
+@keyframes ribbonSway { 0%,100% { transform: rotate(-4deg); } 50% { transform: rotate(4deg); } }
+.scroll-wrap.dragging .ribbon { animation: none; }
+.scroll-wrap.open .ribbon { animation: none; opacity: 0; transform: translateY(120px) rotate(25deg); pointer-events: none; }
+
+.ribbon-hint { position: absolute; left: 0; right: 0; bottom: 0; text-align: center; color: var(--haldi);
+  font-size: 18px; animation: hintBob 1.6s ease-in-out infinite; transition: opacity .4s; }
+.ribbon-hint small { display: block; font-family: var(--serif); font-style: italic; font-size: 14px; color: var(--gold-light); opacity: .8; }
+.scroll-wrap.dragging .ribbon-hint { opacity: 0; }
+.scroll-wrap.open .ribbon-hint { display: none; }
+@keyframes hintBob { 50% { transform: translateY(6px); } }
+
+/* =========================================================
+   Door seal v2: no rotation — ripples, light sweep, emboss
+   ========================================================= */
+/* stop every spin on the door screen */
+.seal-ring { animation: none !important; overflow: hidden; }
+.door-left .door-mandala, .door-right .door-mandala { animation: mandalaGlow 4s ease-in-out infinite !important; }
+@keyframes mandalaGlow {
+  0%,100% { opacity: .75; filter: drop-shadow(0 0 0 rgba(255,204,51,0)); }
+  50%     { opacity: 1;   filter: drop-shadow(0 0 10px rgba(255,204,51,.7)); }
+}
+
+/* gold ripples pulsing out of the seal */
+.seal::before, .seal::after {
+  content: ""; position: absolute; inset: -6px; border-radius: 50%; pointer-events: none;
+  border: 2px solid rgba(255, 214, 102, .85);
+  animation: ripple 2.8s cubic-bezier(.2,.6,.3,1) infinite;
+}
+.seal::after { animation-delay: 1.4s; }
+@keyframes ripple {
+  0%   { transform: scale(1);   opacity: .9; }
+  100% { transform: scale(1.7); opacity: 0; }
+}
+
+/* light sweeping across the seal surface */
+.seal-ring::after {
+  content: ""; position: absolute; top: -20%; bottom: -20%; width: 40%; left: -60%;
+  background: linear-gradient(105deg, transparent, rgba(255, 248, 214, .45), transparent);
+  transform: skewX(-18deg);
+  animation: sealShine 3.6s ease-in-out infinite;
+}
+@keyframes sealShine { 0%, 55% { left: -60%; } 100% { left: 130%; } }
+
+/* Ganesh ji: raised & softly glowing */
+.seal-ganesh {
+  filter: drop-shadow(-1px -1px 0 rgba(255, 244, 200, .45)) drop-shadow(1.5px 2px 1.5px rgba(35, 0, 0, .9))
+          drop-shadow(0 0 8px rgba(255, 204, 51, .35));
+  animation: ganeshGlow 2.8s ease-in-out infinite;
+}
+@keyframes ganeshGlow {
+  0%,100% { filter: drop-shadow(-1px -1px 0 rgba(255,244,200,.45)) drop-shadow(1.5px 2px 1.5px rgba(35,0,0,.9)) drop-shadow(0 0 6px rgba(255,204,51,.25)); }
+  50%     { filter: drop-shadow(-1px -1px 0 rgba(255,244,200,.55)) drop-shadow(1.5px 2px 1.5px rgba(35,0,0,.9)) drop-shadow(0 0 16px rgba(255,204,51,.75)); }
+}
+
+/* Embossed J & M — raised gold letters on a pressed wax plate */
+.seal-initials {
+  bottom: 11%; padding: 2px 12px 3px; border-radius: 999px;
+  font-family: "Cinzel Decorative", serif; font-weight: 700; font-size: clamp(17px, 4.4vw, 22px); letter-spacing: 1px;
+  background: radial-gradient(ellipse at 50% 40%, #b3171c, #6e0b0f);
+  box-shadow: inset 1.5px 1.5px 2px rgba(0,0,0,.65), inset -1px -1px 1.5px rgba(255,170,150,.35);
+  display: flex; align-items: center; gap: 4px;
+}
+.seal-initials, .seal-initials i {
+  background-clip: padding-box;
+}
+.seal-initials > * , .seal-initials { color: #f3c95c; }
+.seal-initials {
+  text-shadow:
+    -1px -1px 0 rgba(255, 246, 210, .85),   /* top-left highlight */
+     1px  1px 0 #7a4a08,                    /* edge */
+     2px  2px 2px rgba(30, 0, 0, .8);       /* cast shadow */
+}
+.seal-initials i { font-family: var(--script); font-style: normal; font-weight: 400; font-size: 1.25em; line-height: 1;
+  color: #ffe08a; text-shadow: -1px -1px 0 rgba(255,246,210,.8), 1px 1px 0 #7a4a08, 2px 2px 2px rgba(30,0,0,.8); }
+
+/* opening: seal lifts & glows away — no spin */
+#intro.opening .seal { transform: translate(-50%, -50%) scale(1.35); opacity: 0; filter: brightness(1.6) blur(2px); }
+#intro.opening .seal::before, #intro.opening .seal::after { animation: none; opacity: 0; }

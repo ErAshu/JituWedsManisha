@@ -401,4 +401,68 @@
     a.download = "Jitendra-Manisha-Wedding.ics";
     document.body.appendChild(a); a.click(); a.remove();
   });
+  /* ---------- Rolled scroll: pull the ribbon to open ---------- */
+  (() => {
+    const wrapEl = document.getElementById("scrollWrap");
+    const body = document.getElementById("scrollBody");
+    const paper = body.querySelector(".scroll-paper");
+    const rod = document.getElementById("rodBottom");
+    const ribbon = document.getElementById("ribbon");
+    let dragging = false, startY = 0, startH = 0, opened = false, moved = false;
+
+    const full = () => paper.offsetHeight;
+    const setH = (h) => {
+      const p = Math.max(0, Math.min(1, h / full()));
+      body.style.height = h + "px";
+      wrapEl.style.setProperty("--p", p.toFixed(3));
+      rod.style.setProperty("--roll", h * 0.8 + "px"); // rod stripes turn as it unrolls
+    };
+    const openFully = () => {
+      if (opened) return;
+      opened = true;
+      body.classList.add("animating");
+      setH(full());
+      wrapEl.classList.add("open");
+      const r = rod.getBoundingClientRect();
+      sparkBurst(r.left + r.width / 2, r.top + 10, 18, 90);
+      if (navigator.vibrate) navigator.vibrate(30);
+      setTimeout(() => { body.classList.remove("animating"); body.style.height = "auto"; }, 1600);
+    };
+    const snapBack = () => {
+      body.classList.add("animating");
+      setH(0);
+      setTimeout(() => body.classList.remove("animating"), 1500);
+    };
+
+    ribbon.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+    document.addEventListener("touchmove", (e) => { if (dragging) e.preventDefault(); }, { passive: false });
+
+    ribbon.addEventListener("pointerdown", (e) => {
+      if (opened) return;
+      dragging = true; moved = false;
+      startY = e.clientY; startH = body.offsetHeight;
+      body.classList.remove("animating");
+      wrapEl.classList.add("dragging");
+      try { ribbon.setPointerCapture(e.pointerId); } catch (_) {}
+    });
+    ribbon.addEventListener("pointermove", (e) => {
+      if (!dragging) return;
+      const dy = e.clientY - startY;
+      if (Math.abs(dy) > 4) moved = true;
+      setH(Math.max(0, Math.min(full(), startH + dy * 1.25)));
+      if (body.offsetHeight > full() * 0.92) { dragging = false; wrapEl.classList.remove("dragging"); openFully(); }
+    });
+    const release = () => {
+      if (!dragging) return;
+      dragging = false;
+      wrapEl.classList.remove("dragging");
+      // a simple tap, or a pull past a quarter, opens it; a tiny tug springs back
+      if (!moved || body.offsetHeight > full() * 0.25) openFully();
+      else snapBack();
+    };
+    ribbon.addEventListener("pointerup", release);
+    ribbon.addEventListener("pointercancel", release);
+    ribbon.addEventListener("lostpointercapture", release);
+    ribbon.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFully(); } });
+  })();
 })();

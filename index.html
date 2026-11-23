@@ -120,7 +120,7 @@
     <button id="openBtn" class="seal" aria-label="Tap to open the invitation">
       <span class="seal-ring"></span>
       <svg class="seal-ganesh"><use href="#ganesh"/></svg>
-      <span class="seal-initials">J <i>&amp;</i> M</span>
+      <span class="seal-initials">J<i>&amp;</i>M</span>
     </button>
     <p class="tap-hint">Tap to Open<br><span lang="hi">शुभ विवाह निमंत्रण</span></p>
   </section>
@@ -169,22 +169,34 @@
       </div>
     </section>
 
-    <!-- Hindi invitation -->
+    <!-- Hindi invitation: rolled scroll, pull the ribbon to open -->
     <section class="nimantran section">
-      <div class="scroll-paper reveal zoom">
-        <p class="np-head" lang="hi">॥ सादर निमंत्रण ॥</p>
-        <p class="np-body" lang="hi">
-          परम पिता परमेश्वर एवं विघ्नहर्ता श्री गणेश जी की असीम कृपा से<br>
-          श्री नरेन्द्र एवं श्रीमती लक्ष्मी के सुपुत्र<br>
-          <strong>चि. जितेन्द्र</strong><br>
-          का शुभ विवाह<br>
-          श्री विजय एवं श्रीमती पूनम की सुपुत्री<br>
-          <strong>सौ. कां. मनीषा</strong><br>
-          के साथ <b>10 दिसंबर 2026</b> को होना निश्चित हुआ है।
-        </p>
-        <p class="np-foot" lang="hi">इस मंगल अवसर पर आप सपरिवार सादर आमंत्रित हैं।<br>कृपया पधारकर नव-दम्पत्ति को अपना शुभाशीष प्रदान करें।</p>
-        <p class="np-en">With joy in our hearts, we request the honour of your presence with family
-          to bless the couple as they begin their new life together.</p>
+      <div class="scroll-wrap reveal zoom" id="scrollWrap">
+        <div class="rod rod-top" aria-hidden="true"></div>
+        <div class="scroll-body" id="scrollBody">
+          <div class="scroll-paper">
+            <p class="np-head" lang="hi">॥ सादर निमंत्रण ॥</p>
+            <p class="np-body" lang="hi">
+              परम पिता परमेश्वर एवं विघ्नहर्ता श्री गणेश जी की असीम कृपा से<br>
+              श्री नरेन्द्र एवं श्रीमती लक्ष्मी के सुपुत्र<br>
+              <strong>चि. जितेन्द्र</strong><br>
+              का शुभ विवाह<br>
+              श्री विजय एवं श्रीमती पूनम की सुपुत्री<br>
+              <strong>सौ. कां. मनीषा</strong><br>
+              के साथ <b>10 दिसंबर 2026</b> को होना निश्चित हुआ है।
+            </p>
+            <p class="np-foot" lang="hi">इस मंगल अवसर पर आप सपरिवार सादर आमंत्रित हैं।<br>कृपया पधारकर नव-दम्पत्ति को अपना शुभाशीष प्रदान करें।</p>
+            <p class="np-en">With joy in our hearts, we request the honour of your presence with family
+              to bless the couple as they begin their new life together.</p>
+          </div>
+        </div>
+        <div class="rod rod-bottom" id="rodBottom" aria-hidden="true">
+          <button class="ribbon" id="ribbon" aria-label="Pull the ribbon to open the invitation">
+            <span class="ribbon-tail l"></span><span class="ribbon-tail r"></span>
+            <span class="ribbon-seal" lang="hi">शुभ</span>
+          </button>
+        </div>
+        <p class="ribbon-hint" lang="hi">👇 रिबन को नीचे खींचें<small>Pull the ribbon to open</small></p>
       </div>
     </section>
 
@@ -301,17 +313,17 @@
     </section>
 
     <!-- Saptapadi -->
-    <section class="saptapadi section">
-      <h2 class="title reveal"><span lang="hi">सप्तपदी · सात फेरे</span>Seven Sacred Vows</h2>
-      <p class="intro-text reveal">Around the holy fire, with Agni Dev as witness, the couple take seven steps together — each one a promise for life.</p>
+    <section class="saptapadi section" lang="hi">
+      <h2 class="title reveal"><span>सप्तपदी</span>सात फेरे, सात वचन</h2>
+      <p class="intro-text reveal">पवित्र अग्नि को साक्षी मानकर वर-वधू सात फेरे लेते हैं —<br>हर फेरा जीवनभर का एक पवित्र वचन है।</p>
       <ol class="vows">
-        <li class="reveal left"><b>1</b><div><h4 lang="hi">पहला फेरा</h4><p>We shall nourish and provide for each other, and walk together on the path of righteousness.</p></div></li>
-        <li class="reveal right"><b>2</b><div><h4 lang="hi">दूसरा फेरा</h4><p>We shall grow together in strength — of body, mind and spirit.</p></div></li>
-        <li class="reveal left"><b>3</b><div><h4 lang="hi">तीसरा फेरा</h4><p>We shall earn honestly and share prosperity, and use it wisely.</p></div></li>
-        <li class="reveal right"><b>4</b><div><h4 lang="hi">चौथा फेरा</h4><p>We shall love, honour and respect each other’s families as our own.</p></div></li>
-        <li class="reveal left"><b>5</b><div><h4 lang="hi">पाँचवाँ फेरा</h4><p>We shall be blessed with a happy home and raise our family with values.</p></div></li>
-        <li class="reveal right"><b>6</b><div><h4 lang="hi">छठा फेरा</h4><p>We shall stand by each other through every season, in joy and in sorrow.</p></div></li>
-        <li class="reveal left"><b>7</b><div><h4 lang="hi">सातवाँ फेरा</h4><p>We shall remain lifelong companions and best friends — for this life and seven more.</p></div></li>
+        <li class="reveal left"><b>१</b><div><h4>पहला फेरा</h4><p>हम एक-दूसरे का पालन-पोषण करेंगे और सदा धर्म के मार्ग पर साथ चलेंगे।</p></div></li>
+        <li class="reveal right"><b>२</b><div><h4>दूसरा फेरा</h4><p>हम तन, मन और आत्मा से एक-दूसरे का बल बनेंगे।</p></div></li>
+        <li class="reveal left"><b>३</b><div><h4>तीसरा फेरा</h4><p>हम ईमानदारी से धन कमाएँगे, सुख-समृद्धि बाँटेंगे और उसका सदुपयोग करेंगे।</p></div></li>
+        <li class="reveal right"><b>४</b><div><h4>चौथा फेरा</h4><p>हम एक-दूसरे के परिवार को अपना मानकर सदा प्रेम और सम्मान देंगे।</p></div></li>
+        <li class="reveal left"><b>५</b><div><h4>पाँचवाँ फेरा</h4><p>हम एक सुखी घर बसाएँगे और अपनी संतान को अच्छे संस्कार देंगे।</p></div></li>
+        <li class="reveal right"><b>६</b><div><h4>छठा फेरा</h4><p>हम हर सुख-दुःख और जीवन के हर मौसम में एक-दूसरे का साथ निभाएँगे।</p></div></li>
+        <li class="reveal left"><b>७</b><div><h4>सातवाँ फेरा</h4><p>हम जीवनभर सच्चे मित्र और साथी बनकर रहेंगे — इस जन्म में और सात जन्मों तक।</p></div></li>
       </ol>
     </section>
 
