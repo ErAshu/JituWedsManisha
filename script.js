@@ -57,7 +57,10 @@
         audio.volume = v;
         if (v >= 0.7) clearInterval(fade);
       }, 150);
-    }).catch(() => { musicBtn.hidden = false; });
+    }).catch((err) => {
+      // autoplay blocked: offer the button; missing/unsupported file: keep it hidden
+      if (musicAvailable && err && err.name === "NotAllowedError") musicBtn.hidden = false;
+    });
   };
 
   musicBtn.addEventListener("click", () => {
@@ -106,6 +109,7 @@
     setTimeout(() => {
       intro.classList.add("opened");
       document.body.classList.remove("locked");
+      startDateLock();
       revealVisible();
     }, 2300);
     setTimeout(() => intro.remove(), 3500);
@@ -120,7 +124,12 @@
       if (en.isIntersecting) { en.target.classList.add("show"); io.unobserve(en.target); }
     });
   }, { threshold: 0.15 });
-  const revealVisible = () => reveals.forEach((el) => io.observe(el));
+  const revealVisible = () => reveals.forEach((el) => {
+    // show anything already on screen right away, observe the rest
+    const r = el.getBoundingClientRect();
+    if (r.top < window.innerHeight && r.bottom > 0) el.classList.add("show");
+    else io.observe(el);
+  });
 
   /* ---------- Countdown ---------- */
   const target = new Date("2026-12-10T00:00:00+05:30").getTime();
@@ -189,8 +198,59 @@
   let scratchingNow = false;
   let revealedCount = 0;
 
-  // Block page scroll while a finger is scratching (iOS + Android)
-  document.addEventListener("touchmove", (e) => { if (scratchingNow) e.preventDefault(); }, { passive: false });
+  const finishers = [];
+  let dateLocked = false, skipTimer;
+
+  // Gently shake the coins when someone tries to scroll before scratching
+  let lastNudge = 0;
+  const nudge = () => {
+    const now = Date.now();
+    if (now - lastNudge < 900) return;
+    lastNudge = now;
+    wrap.classList.remove("nudge"); void wrap.offsetWidth; wrap.classList.add("nudge");
+    if (navigator.vibrate) navigator.vibrate(15);
+  };
+
+  function startDateLock() {
+    if (revealedCount === coins.length) return;
+    dateLocked = true;
+    document.documentElement.classList.add("date-lock");
+    window.scrollTo({ top: 0, behavior: "instant" });
+    // make sure the coins are on screen (small phones)
+    setTimeout(() => {
+      const r = wrap.getBoundingClientRect();
+      if (r.bottom > window.innerHeight - 10) {
+        // briefly lift the lock so the smooth scroll isn't blocked, then re-apply it
+        const root = document.documentElement;
+        root.classList.remove("date-lock");
+        window.scrollTo({ top: window.scrollY + r.bottom - window.innerHeight + 24, behavior: "instant" });
+        setTimeout(() => { if (dateLocked) root.classList.add("date-lock"); }, 900);
+      }
+    }, 900);
+    // accessibility fallback if someone really can't scratch
+    skipTimer = setTimeout(() => { skipBtn.hidden = false; }, 20000);
+  }
+  const endDateLock = () => {
+    dateLocked = false;
+    clearTimeout(skipTimer);
+    skipBtn.hidden = true;
+    document.documentElement.classList.remove("date-lock");
+  };
+
+  // Block page scroll while scratching, and until the date has been revealed
+  document.addEventListener("touchmove", (e) => {
+    if (scratchingNow || dateLocked) e.preventDefault();
+    if (dateLocked && !scratchingNow) nudge();
+  }, { passive: false });
+  window.addEventListener("wheel", (e) => { if (dateLocked) { e.preventDefault(); nudge(); } }, { passive: false });
+  window.addEventListener("keydown", (e) => {
+    if (dateLocked && [" ", "PageDown", "PageUp", "ArrowDown", "ArrowUp", "End", "Home"].includes(e.key)) {
+      e.preventDefault(); nudge();
+    }
+  });
+
+  const skipBtn = document.getElementById("scratchSkip");
+  skipBtn.addEventListener("click", () => finishers.forEach((f) => f()));
 
   coins.forEach((coin) => {
     const cv = coin.querySelector("canvas");
@@ -253,6 +313,7 @@
       if (navigator.vibrate) navigator.vibrate(30);
       if (++revealedCount === coins.length) {
         wrap.classList.add("revealed");
+        endDateLock();
         burst(60);
         if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
       }
@@ -263,6 +324,7 @@
     cv.addEventListener("pointerdown", (e) => {
       if (finished) return;
       active = scratchingNow = true;
+      wrap.classList.add("started");
       document.body.classList.add("scratching");
       try { cv.setPointerCapture(e.pointerId); } catch (_) {}
       scratch(pos(e));
@@ -272,6 +334,7 @@
     cv.addEventListener("pointercancel", end);
     cv.addEventListener("lostpointercapture", end);
 
+    finishers.push(finish);
     paint();
     if (document.fonts) document.fonts.ready.then(paint);
     window.addEventListener("resize", () => { if (!finished && !moves) paint(); });
