@@ -158,4 +158,184 @@
       }
     } catch (_) { /* user cancelled */ }
   });
+
+  /* ---------- Stagger groups of reveals ---------- */
+  document.querySelectorAll(".event-list, .info-grid, .vows, .couple-grid").forEach((group) => {
+    [...group.children].forEach((c, i) => c.style.setProperty("--d", (i * 0.15) + "s"));
+  });
+
+  /* ---------- Spark burst helper ---------- */
+  const sparkBurst = (x, y, n = 10, spread = 60) => {
+    for (let i = 0; i < n; i++) {
+      const s = document.createElement("span");
+      s.className = "tap-spark";
+      const a = (Math.PI * 2 * i) / n + Math.random() * 0.5;
+      const r = spread * (0.5 + Math.random() * 0.7);
+      s.style.left = x + "px"; s.style.top = y + "px";
+      s.style.setProperty("--x", Math.cos(a) * r + "px");
+      s.style.setProperty("--y", Math.sin(a) * r + "px");
+      document.body.appendChild(s);
+      setTimeout(() => s.remove(), 850);
+    }
+  };
+  document.addEventListener("pointerdown", (e) => {
+    if (e.target.closest(".coin, #intro, a, button, iframe")) return;
+    sparkBurst(e.clientX, e.clientY, 8, 40);
+  });
+
+  /* ---------- Scratch card date reveal ---------- */
+  const wrap = document.getElementById("scratch");
+  const coins = [...wrap.querySelectorAll(".coin")];
+  let scratchingNow = false;
+  let revealedCount = 0;
+
+  // Block page scroll while a finger is scratching (iOS + Android)
+  document.addEventListener("touchmove", (e) => { if (scratchingNow) e.preventDefault(); }, { passive: false });
+
+  coins.forEach((coin) => {
+    const cv = coin.querySelector("canvas");
+    const ctx = cv.getContext("2d");
+    let w = 0, h = 0, last = null, moves = 0, finished = false, active = false;
+
+    const paint = () => {
+      if (finished) return;
+      const dpr = Math.min(2, window.devicePixelRatio || 1);
+      w = cv.offsetWidth; h = cv.offsetHeight;
+      if (!w) return;
+      cv.width = w * dpr; cv.height = h * dpr;
+      ctx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      ctx.globalCompositeOperation = "source-over";
+      // gold foil
+      const g = ctx.createRadialGradient(w * .35, h * .3, 2, w / 2, h / 2, w * .7);
+      g.addColorStop(0, "#fff4c2"); g.addColorStop(.35, "#e7b54a"); g.addColorStop(.75, "#b97c17"); g.addColorStop(1, "#7a4a08");
+      ctx.fillStyle = g; ctx.fillRect(0, 0, w, h);
+      // foil texture
+      ctx.globalAlpha = .18; ctx.strokeStyle = "#5a0d12"; ctx.lineWidth = 1;
+      for (let i = -h; i < w; i += 7) { ctx.beginPath(); ctx.moveTo(i, 0); ctx.lineTo(i + h, h); ctx.stroke(); }
+      ctx.globalAlpha = 1;
+      // mandala ring + heart
+      ctx.strokeStyle = "rgba(90,13,18,.55)"; ctx.lineWidth = 1.5;
+      ctx.beginPath(); ctx.arc(w / 2, h / 2, w * .36, 0, Math.PI * 2); ctx.stroke();
+      for (let i = 0; i < 12; i++) {
+        const a = (Math.PI * 2 * i) / 12;
+        ctx.beginPath(); ctx.arc(w / 2 + Math.cos(a) * w * .36, h / 2 + Math.sin(a) * w * .36, 3, 0, Math.PI * 2);
+        ctx.fillStyle = "rgba(90,13,18,.5)"; ctx.fill();
+      }
+      ctx.fillStyle = "#7a1218"; ctx.font = `${w * .3}px serif`; ctx.textAlign = "center"; ctx.textBaseline = "middle";
+      ctx.fillText("❤", w / 2, h / 2 + 2);
+    };
+
+    const pos = (e) => {
+      const r = cv.getBoundingClientRect();
+      return { x: (e.clientX - r.left) * (w / r.width), y: (e.clientY - r.top) * (h / r.height) };
+    };
+    const scratch = (p) => {
+      ctx.globalCompositeOperation = "destination-out";
+      ctx.lineCap = "round"; ctx.lineJoin = "round"; ctx.lineWidth = w * .26;
+      ctx.beginPath();
+      ctx.moveTo((last || p).x, (last || p).y); ctx.lineTo(p.x, p.y); ctx.stroke();
+      last = p;
+      if (++moves % 6 === 0) check();
+    };
+    const check = () => {
+      const { data } = ctx.getImageData(0, 0, cv.width, cv.height);
+      let clear = 0, total = 0;
+      for (let i = 3; i < data.length; i += 64) { total++; if (data[i] < 100) clear++; }
+      // the coin is round: corners are never visible, so ~50% needs most of the face is uncovered
+      if (clear / total > 0.5) finish();
+    };
+    const finish = () => {
+      if (finished) return;
+      finished = true;
+      coin.classList.add("done");
+      const r = coin.getBoundingClientRect();
+      sparkBurst(r.left + r.width / 2, r.top + r.height / 2, 16, 80);
+      if (navigator.vibrate) navigator.vibrate(30);
+      if (++revealedCount === coins.length) {
+        wrap.classList.add("revealed");
+        burst(60);
+        if (navigator.vibrate) navigator.vibrate([40, 60, 40]);
+      }
+    };
+    const end = () => { if (!active) return; active = false; scratchingNow = false; last = null; document.body.classList.remove("scratching"); if (!finished) check(); };
+
+    cv.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+    cv.addEventListener("pointerdown", (e) => {
+      if (finished) return;
+      active = scratchingNow = true;
+      document.body.classList.add("scratching");
+      try { cv.setPointerCapture(e.pointerId); } catch (_) {}
+      scratch(pos(e));
+    });
+    cv.addEventListener("pointermove", (e) => { if (active && !finished) scratch(pos(e)); });
+    cv.addEventListener("pointerup", end);
+    cv.addEventListener("pointercancel", end);
+    cv.addEventListener("lostpointercapture", end);
+
+    paint();
+    if (document.fonts) document.fonts.ready.then(paint);
+    window.addEventListener("resize", () => { if (!finished && !moves) paint(); });
+  });
+
+  /* ---------- Twinkling sparkles in hero ---------- */
+  const sc = document.querySelector(".sparkles");
+  if (sc && !matchMedia("(prefers-reduced-motion: reduce)").matches) {
+    const sx = sc.getContext("2d");
+    let stars = [], running = true, SW = 0, SH = 0;
+    const sizeIt = () => {
+      const dpr = Math.min(2, devicePixelRatio || 1);
+      SW = sc.offsetWidth; SH = sc.offsetHeight;
+      sc.width = SW * dpr; sc.height = SH * dpr; sx.setTransform(dpr, 0, 0, dpr, 0, 0);
+      const n = SW < 600 ? 35 : 60;
+      stars = Array.from({ length: n }, () => ({
+        x: Math.random() * SW, y: Math.random() * SH, r: .6 + Math.random() * 1.8,
+        p: Math.random() * Math.PI * 2, s: .01 + Math.random() * .03, vy: -.05 - Math.random() * .15,
+      }));
+    };
+    const draw = () => {
+      if (running) {
+        sx.clearRect(0, 0, SW, SH);
+        for (const st of stars) {
+          st.p += st.s; st.y += st.vy; if (st.y < -5) st.y = SH + 5;
+          const a = (Math.sin(st.p) + 1) / 2;
+          sx.globalAlpha = a * .9;
+          sx.fillStyle = "#ffe9a0";
+          sx.beginPath(); sx.arc(st.x, st.y, st.r, 0, Math.PI * 2); sx.fill();
+          if (st.r > 1.8 && a > .7) { // cross glint
+            sx.strokeStyle = "#fff6cf"; sx.lineWidth = .7;
+            sx.beginPath(); sx.moveTo(st.x - st.r * 3, st.y); sx.lineTo(st.x + st.r * 3, st.y);
+            sx.moveTo(st.x, st.y - st.r * 3); sx.lineTo(st.x, st.y + st.r * 3); sx.stroke();
+          }
+        }
+      }
+      requestAnimationFrame(draw);
+    };
+    sizeIt(); draw();
+    window.addEventListener("resize", sizeIt);
+    new IntersectionObserver(([en]) => { running = en.isIntersecting; }).observe(sc);
+  }
+
+  /* ---------- Add to calendar (.ics) ---------- */
+  document.getElementById("calBtn").addEventListener("click", () => {
+    const ev = [
+      ["20261208", "20261209", "Haldi — Jitendra & Manisha", "Tiril, Kokar, Ranchi"],
+      ["20261209", "20261210", "Mehandi — Jitendra & Manisha", "Tiril, Kokar, Ranchi"],
+      ["20261210", "20261211", "Shubh Vivah — Jitendra & Manisha", "Saket Nagar, Hinoo, Ranchi 834009"],
+      ["20261212", "20261213", "Reception — Jitendra & Manisha", "Tiril Basti, Kokar, Ranchi 834001"],
+    ];
+    const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
+    const ics = [
+      "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//JitendraWedsManisha//Invite//EN", "CALSCALE:GREGORIAN",
+      ...ev.flatMap(([s, e, t, l], i) => [
+        "BEGIN:VEVENT", `UID:jm-wedding-${i}@invite`, `DTSTAMP:${stamp}`,
+        `DTSTART;VALUE=DATE:${s}`, `DTEND;VALUE=DATE:${e}`,
+        `SUMMARY:${t}`, `LOCATION:${l.replace(/,/g, "\\,")}`, "END:VEVENT",
+      ]),
+      "END:VCALENDAR",
+    ].join("\r\n");
+    const a = document.createElement("a");
+    a.href = URL.createObjectURL(new Blob([ics], { type: "text/calendar" }));
+    a.download = "Jitendra-Manisha-Wedding.ics";
+    document.body.appendChild(a); a.click(); a.remove();
+  });
 })();
