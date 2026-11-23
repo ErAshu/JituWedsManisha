@@ -799,3 +799,12 @@ body.scratching { overflow: hidden; touch-action: none; overscroll-behavior: non
 /* more breathing room under "विनीत एवं स्वागताकांक्षी" */
 .host-tag.ribbon-tag + .host-name { margin-top: 16px; }
 .host-phone { margin-top: 10px; }
+
+/* --- No sideways scrolling on mobile ---
+   Slide-in elements start translated off-screen; clip them to the viewport. */
+html, body { overflow-x: hidden; max-width: 100%; }
+#card { overflow-x: hidden; }                 /* fallback for older Safari */
+@supports (overflow-x: clip) {
+  html, body, #card { overflow-x: clip; }     /* clips without creating a scroll container */
+}
+body { touch-action: pan-y pinch-zoom; overscroll-behavior-x: none; }
