@@ -420,6 +420,7 @@
     const openFully = () => {
       if (opened) return;
       opened = true;
+      document.getElementById("card").classList.remove("gated");
       body.classList.add("animating");
       setH(full());
       wrapEl.classList.add("open");
@@ -435,6 +436,20 @@
     };
 
     ribbon.addEventListener("touchstart", (e) => e.preventDefault(), { passive: false });
+
+    // trying to scroll past the closed scroll gives the ribbon a little tug as a hint
+    let lastTug = 0, touchY = 0;
+    const tug = () => {
+      if (opened || Date.now() - lastTug < 900) return;
+      const atBottom = window.innerHeight + window.scrollY >= document.documentElement.scrollHeight - 4;
+      if (!atBottom) return;
+      lastTug = Date.now();
+      wrapEl.classList.remove("tug"); void wrapEl.offsetWidth; wrapEl.classList.add("tug");
+      if (navigator.vibrate) navigator.vibrate(15);
+    };
+    window.addEventListener("wheel", (e) => { if (e.deltaY > 0) tug(); }, { passive: true });
+    window.addEventListener("touchstart", (e) => { touchY = e.touches[0].clientY; }, { passive: true });
+    window.addEventListener("touchmove", (e) => { if (e.touches[0].clientY < touchY - 10) tug(); }, { passive: true });
     document.addEventListener("touchmove", (e) => { if (dragging) e.preventDefault(); }, { passive: false });
 
     ribbon.addEventListener("pointerdown", (e) => {
@@ -464,46 +479,5 @@
     ribbon.addEventListener("pointercancel", release);
     ribbon.addEventListener("lostpointercapture", release);
     ribbon.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFully(); } });
-  })();
-  /* ---------- RSVP via WhatsApp ---------- */
-  (() => {
-    const form = document.getElementById("rsvpForm");
-    const thanks = document.getElementById("rsvpThanks");
-    const err = document.getElementById("rsvpError");
-    const guests = form.elements.guests;
-    const PHONE = "919631139351";
-
-    const syncAttend = () => form.classList.toggle("no", form.elements.attend.value === "no");
-    form.addEventListener("change", syncAttend);
-    form.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => {
-      guests.value = Math.min(20, Math.max(1, (+guests.value || 1) + +b.dataset.step));
-    }));
-
-    form.addEventListener("submit", (e) => {
-      e.preventDefault();
-      const name = form.elements.name.value.trim();
-      if (!name) { err.hidden = false; form.elements.name.focus(); return; }
-      err.hidden = true;
-      const yes = form.elements.attend.value === "yes";
-      const events = [...form.querySelectorAll('input[name="events"]:checked')].map((i) => i.value);
-      const msg = form.elements.msg.value.trim();
-      const lines = [
-        "🙏 *RSVP — जितेन्द्र ❤ मनीषा शुभ विवाह*",
-        "",
-        `👤 नाम: ${name}`,
-        yes ? "✅ उपस्थिति: हाँ, अवश्य आएँगे" : "❌ उपस्थिति: क्षमा करें, नहीं आ पाएँगे",
-      ];
-      if (yes) {
-        lines.push(`👨‍👩‍👧 सदस्य: ${guests.value}`);
-        if (events.length) lines.push(`🗓️ कार्यक्रम: ${events.join(", ")}`);
-      }
-      if (msg) lines.push("", `💌 शुभकामना: ${msg}`);
-      window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
-      form.hidden = true; thanks.hidden = false;
-      if (yes) burst(40);
-      try { localStorage.setItem("jm-rsvp", "1"); } catch (_) {}
-    });
-    document.getElementById("rsvpAgain").addEventListener("click", () => { thanks.hidden = true; form.hidden = false; });
-    syncAttend();
   })();
 })();
