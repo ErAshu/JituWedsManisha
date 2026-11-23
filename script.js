@@ -384,14 +384,14 @@
       ["20261208", "20261209", "Haldi — Jitendra & Manisha", "Tiril, Kokar, Ranchi"],
       ["20261209", "20261210", "Mehandi — Jitendra & Manisha", "Tiril, Kokar, Ranchi"],
       ["20261210", "20261211", "Shubh Vivah — Jitendra & Manisha", "Saket Nagar, Hinoo, Ranchi 834009"],
-      ["20261212", "20261213", "Reception — Jitendra & Manisha", "Tiril Basti, Kokar, Ranchi 834001"],
+      ["20261212T130000Z", "20261212T173000Z", "Reception — Jitendra & Manisha (from 6:30 PM)", "Tiril Basti, Kokar, Ranchi 834001"],
     ];
     const stamp = new Date().toISOString().replace(/[-:]/g, "").split(".")[0] + "Z";
     const ics = [
       "BEGIN:VCALENDAR", "VERSION:2.0", "PRODID:-//JitendraWedsManisha//Invite//EN", "CALSCALE:GREGORIAN",
       ...ev.flatMap(([s, e, t, l], i) => [
         "BEGIN:VEVENT", `UID:jm-wedding-${i}@invite`, `DTSTAMP:${stamp}`,
-        `DTSTART;VALUE=DATE:${s}`, `DTEND;VALUE=DATE:${e}`,
+        ...(s.includes("T") ? [`DTSTART:${s}`, `DTEND:${e}`] : [`DTSTART;VALUE=DATE:${s}`, `DTEND;VALUE=DATE:${e}`]),
         `SUMMARY:${t}`, `LOCATION:${l.replace(/,/g, "\\,")}`, "END:VEVENT",
       ]),
       "END:VCALENDAR",
@@ -464,5 +464,46 @@
     ribbon.addEventListener("pointercancel", release);
     ribbon.addEventListener("lostpointercapture", release);
     ribbon.addEventListener("keydown", (e) => { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); openFully(); } });
+  })();
+  /* ---------- RSVP via WhatsApp ---------- */
+  (() => {
+    const form = document.getElementById("rsvpForm");
+    const thanks = document.getElementById("rsvpThanks");
+    const err = document.getElementById("rsvpError");
+    const guests = form.elements.guests;
+    const PHONE = "919631139351";
+
+    const syncAttend = () => form.classList.toggle("no", form.elements.attend.value === "no");
+    form.addEventListener("change", syncAttend);
+    form.querySelectorAll("[data-step]").forEach((b) => b.addEventListener("click", () => {
+      guests.value = Math.min(20, Math.max(1, (+guests.value || 1) + +b.dataset.step));
+    }));
+
+    form.addEventListener("submit", (e) => {
+      e.preventDefault();
+      const name = form.elements.name.value.trim();
+      if (!name) { err.hidden = false; form.elements.name.focus(); return; }
+      err.hidden = true;
+      const yes = form.elements.attend.value === "yes";
+      const events = [...form.querySelectorAll('input[name="events"]:checked')].map((i) => i.value);
+      const msg = form.elements.msg.value.trim();
+      const lines = [
+        "🙏 *RSVP — जितेन्द्र ❤ मनीषा शुभ विवाह*",
+        "",
+        `👤 नाम: ${name}`,
+        yes ? "✅ उपस्थिति: हाँ, अवश्य आएँगे" : "❌ उपस्थिति: क्षमा करें, नहीं आ पाएँगे",
+      ];
+      if (yes) {
+        lines.push(`👨‍👩‍👧 सदस्य: ${guests.value}`);
+        if (events.length) lines.push(`🗓️ कार्यक्रम: ${events.join(", ")}`);
+      }
+      if (msg) lines.push("", `💌 शुभकामना: ${msg}`);
+      window.open(`https://wa.me/${PHONE}?text=${encodeURIComponent(lines.join("\n"))}`, "_blank");
+      form.hidden = true; thanks.hidden = false;
+      if (yes) burst(40);
+      try { localStorage.setItem("jm-rsvp", "1"); } catch (_) {}
+    });
+    document.getElementById("rsvpAgain").addEventListener("click", () => { thanks.hidden = true; form.hidden = false; });
+    syncAttend();
   })();
 })();
